@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+venv/
+.env
+node_modules/
+dist/
+.DS_Store
+*.log
+.pgdata/
+Secret keys/
+deploy/.sa_temp.json
+deploy/deployment_result.json
+deploy/deploy_log.txt
+deploy/explore_vps*.py
+deploy/find_oauth*.py
+deploy/fetch_sa.py
+deploy/read_fatawa_env.py
+deploy/quick_check.py
+deploy/run_oauth.py

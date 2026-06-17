@@ -1,0 +1,13 @@
+[Unit]
+Description=Meilisearch for Madani Muzakarah
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/meilisearch --db-path /var/lib/meilisearch --master-key masterKey --http-addr 127.0.0.1:7700
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Madani Muzakarah FastAPI
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/madani-muzakarah/backend
+EnvironmentFile=/var/www/madani-muzakarah/backend/.env
+ExecStart=/var/www/madani-muzakarah/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

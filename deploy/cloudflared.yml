@@ -1,0 +1,7 @@
+tunnel: muzakarah-tunnel
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: YOUR_TUNNEL_HOSTNAME.cfargotunnel.com
+    service: http://localhost:80
+  - service: http_status:404
