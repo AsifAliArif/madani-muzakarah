@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { downloadAsImage, downloadAsPdf, shareAsFile, shareText, buildShareText } from "../export/noteExport";
+import ActionButton from "./ActionButton";
 
 interface Props {
   title: string;
@@ -14,19 +15,15 @@ export default function ExportMenu({ title, contentHtml, authorName }: Props) {
   return (
     <div className="flex gap-2 flex-wrap">
       <div className="relative">
-        <button
-          type="button"
-          className="px-4 py-2 bg-primary text-white rounded-full text-base min-h-[44px]"
-          onClick={() => { setOpen(!open); setShareOpen(false); }}
-        >
+        <ActionButton variant="primary" onClick={() => { setOpen(!open); setShareOpen(false); }}>
           ڈاؤن لوڈ
-        </button>
+        </ActionButton>
         {open && (
-          <div className="absolute top-full mt-1 bg-white border rounded-card shadow-lg z-20 min-w-[160px]">
-            <button type="button" className="block w-full text-right px-4 py-3 hover:bg-section" onClick={() => { downloadAsImage(title, contentHtml, authorName); setOpen(false); }}>
-              تصویر (PNG)
+          <div className="absolute top-full mt-1 bg-white border rounded-card shadow-elevated z-20 min-w-[140px]">
+            <button type="button" className="block w-full text-right px-3 py-2.5 text-sm hover:bg-section" onClick={() => { downloadAsImage(title, contentHtml, authorName); setOpen(false); }}>
+              تصویر
             </button>
-            <button type="button" className="block w-full text-right px-4 py-3 hover:bg-section" onClick={() => { downloadAsPdf(title, contentHtml, authorName); setOpen(false); }}>
+            <button type="button" className="block w-full text-right px-3 py-2.5 text-sm hover:bg-section" onClick={() => { downloadAsPdf(title, contentHtml, authorName); setOpen(false); }}>
               PDF
             </button>
           </div>
@@ -34,26 +31,22 @@ export default function ExportMenu({ title, contentHtml, authorName }: Props) {
       </div>
 
       <div className="relative">
-        <button
-          type="button"
-          className="px-4 py-2 bg-accent text-white rounded-full text-base min-h-[44px]"
-          onClick={() => { setShareOpen(!shareOpen); setOpen(false); }}
-        >
+        <ActionButton variant="accent" onClick={() => { setShareOpen(!shareOpen); setOpen(false); }}>
           شیئر
-        </button>
+        </ActionButton>
         {shareOpen && (
-          <div className="absolute top-full mt-1 bg-white border rounded-card shadow-lg z-20 min-w-[180px]">
-            <button type="button" className="block w-full text-right px-4 py-3 hover:bg-section" onClick={() => { shareAsFile("image", title, contentHtml, authorName); setShareOpen(false); }}>
-              تصویر شیئر
+          <div className="absolute top-full mt-1 bg-white border rounded-card shadow-elevated z-20 min-w-[150px]">
+            <button type="button" className="block w-full text-right px-3 py-2.5 text-sm hover:bg-section" onClick={() => { shareAsFile("image", title, contentHtml, authorName); setShareOpen(false); }}>
+              تصویر
             </button>
-            <button type="button" className="block w-full text-right px-4 py-3 hover:bg-section" onClick={() => { shareAsFile("pdf", title, contentHtml, authorName); setShareOpen(false); }}>
-              PDF شیئر
+            <button type="button" className="block w-full text-right px-3 py-2.5 text-sm hover:bg-section" onClick={() => { shareAsFile("pdf", title, contentHtml, authorName); setShareOpen(false); }}>
+              PDF
             </button>
-            <button type="button" className="block w-full text-right px-4 py-3 hover:bg-section" onClick={() => {
+            <button type="button" className="block w-full text-right px-3 py-2.5 text-sm hover:bg-section" onClick={() => {
               shareText(buildShareText(title, contentHtml, authorName), title);
               setShareOpen(false);
             }}>
-              ٹیکسٹ شیئر
+              ٹیکسٹ
             </button>
           </div>
         )}

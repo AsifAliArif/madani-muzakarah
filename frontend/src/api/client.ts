@@ -28,6 +28,25 @@ export interface Note {
 }
 
 const API_BASE = "";
+const DEBUG_ENDPOINT = "http://127.0.0.1:7671/ingest/0f09a6f1-8c05-45fb-bac4-5afefa382f94";
+
+function dbgLog(hypothesisId: string, location: string, message: string, data: Record<string, unknown> = {}) {
+  // #region agent log
+  fetch(DEBUG_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "316158" },
+    body: JSON.stringify({
+      sessionId: "316158",
+      runId: "pre-fix",
+      hypothesisId,
+      location,
+      message,
+      data,
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -36,6 +55,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options,
   });
   if (res.status === 401) {
+    // #region agent log
+    dbgLog("H5", "client.ts:request", "auth_me_unauthorized", { path });
+    // #endregion
     window.location.href = "/login";
     throw new Error("Unauthorized");
   }
@@ -49,7 +71,35 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   me: () => request<User>("/api/auth/me"),
-  login: () => { window.location.href = "/api/auth/login"; },
+  login: async () => {
+    // #region agent log
+    dbgLog("H1", "client.ts:login", "login_fetch_start", {
+      swControlled: "serviceWorker" in navigator && !!navigator.serviceWorker.controller,
+    });
+    // #endregion
+    try {
+      const res = await fetch("/api/auth/login", { redirect: "manual", credentials: "include" });
+      const loc = res.headers.get("Location");
+      // #region agent log
+      dbgLog("H1", "client.ts:login", "login_fetch_response", {
+        status: res.status,
+        hasLocation: !!loc,
+        locationHost: loc ? new URL(loc).host : null,
+      });
+      // #endregion
+      if (loc) {
+        window.location.href = loc;
+        return;
+      }
+    } catch (err) {
+      // #region agent log
+      dbgLog("H2", "client.ts:login", "login_fetch_error", {
+        error: err instanceof Error ? err.message : "unknown",
+      });
+      // #endregion
+    }
+    window.location.href = "/api/auth/login";
+  },
   logout: () => request("/api/auth/logout", { method: "POST" }),
   notes: {
     list: (status = "active") => request<Note[]>(`/api/notes?status=${status}`),

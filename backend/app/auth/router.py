@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.auth.security import COOKIE_NAME, create_access_token, get_current_user
 from app.config import settings
 from app.database import get_db
+from app.debug_log import dbg
 from app.models.user import User, UserRole
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -16,6 +17,11 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+_USE_SECURE_COOKIES = settings.frontend_url.startswith("https://")
+_COOKIE_KWARGS = {"httponly": True, "samesite": "lax", "path": "/"}
+if _USE_SECURE_COOKIES:
+    _COOKIE_KWARGS["secure"] = True
 
 
 @router.get("/login")
@@ -30,14 +36,28 @@ async def login(request: Request):
         "access_type": "offline",
         "prompt": "select_account",
     }
+    # #region agent log
+    dbg("H3", "router.py:login", "login_start", {
+        "redirect_uri": settings.google_redirect_uri,
+        "secure_cookies": _USE_SECURE_COOKIES,
+        "has_client_id": bool(settings.google_client_id),
+    })
+    # #endregion
     response = RedirectResponse(f"{GOOGLE_AUTH_URL}?{urlencode(params)}")
-    response.set_cookie("oauth_state", state, httponly=True, max_age=600, samesite="lax")
+    response.set_cookie("oauth_state", state, max_age=600, **_COOKIE_KWARGS)
     return response
 
 
 @router.get("/callback")
 async def callback(code: str, state: str, request: Request, db: Session = Depends(get_db)):
     stored_state = request.cookies.get("oauth_state")
+    # #region agent log
+    dbg("H4", "router.py:callback", "callback_start", {
+        "has_code": bool(code),
+        "state_match": bool(stored_state and stored_state == state),
+        "has_oauth_state_cookie": bool(stored_state),
+    })
+    # #endregion
     if not stored_state or stored_state != state:
         raise HTTPException(status_code=400, detail="Invalid OAuth state")
 
@@ -53,6 +73,11 @@ async def callback(code: str, state: str, request: Request, db: Session = Depend
             },
         )
         if token_resp.status_code != 200:
+            # #region agent log
+            dbg("H4", "router.py:callback", "token_exchange_failed", {
+                "status": token_resp.status_code,
+            })
+            # #endregion
             raise HTTPException(status_code=400, detail="Google token exchange failed")
         access_token = token_resp.json().get("access_token")
 
@@ -98,20 +123,24 @@ async def callback(code: str, state: str, request: Request, db: Session = Depend
 
     jwt_token = create_access_token(str(user.id))
     response = RedirectResponse(settings.frontend_url)
-    response.set_cookie(
-        COOKIE_NAME,
-        jwt_token,
-        httponly=True,
-        max_age=60 * 60 * 24 * 7,
-        samesite="lax",
-        secure=settings.frontend_url.startswith("https"),
-    )
-    response.delete_cookie("oauth_state")
+    response.set_cookie(COOKIE_NAME, jwt_token, max_age=60 * 60 * 24 * 7, **_COOKIE_KWARGS)
+    response.delete_cookie("oauth_state", path="/", secure=_USE_SECURE_COOKIES)
+    # #region agent log
+    dbg("H5", "router.py:callback", "login_success", {
+        "user_id_prefix": str(user.id)[:8],
+        "role": user.role.value,
+    })
+    # #endregion
     return response
 
 
 @router.get("/me")
-def me(user: User = Depends(get_current_user)):
+def me(request: Request, user: User = Depends(get_current_user)):
+    # #region agent log
+    dbg("H5", "router.py:me", "me_ok", {
+        "has_token_cookie": bool(request.cookies.get(COOKIE_NAME)),
+    })
+    # #endregion
     from app.schemas import UserOut
     return UserOut(
         id=user.id,

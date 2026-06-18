@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TipTapEditor from "../editor/TipTapEditor";
 import CategoryPicker from "./CategoryPicker";
+import ActionButton from "./ActionButton";
 import { api, Note } from "../api/client";
 
 interface Props {
@@ -47,43 +48,41 @@ export default function NoteForm({ note, onSaved, onCancel }: Props) {
   return (
     <div className="max-w-4xl mx-auto space-y-4">
       <div>
-        <label className="block text-primary font-title mb-2">ہیڈنگ (اختیاری)</label>
+        <label className="block text-primary font-title mb-1.5 text-base">ہیڈنگ (اختیاری)</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="خالی چھوڑیں تو پہلی لائن ہیڈنگ بنے گی"
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 font-title text-lg"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 font-title text-base focus:border-primary focus:outline-none"
         />
       </div>
 
       <div>
-        <label className="block text-primary font-title mb-2">مرکزی مواد</label>
+        <label className="block text-primary font-title mb-1.5 text-base">مرکزی مواد</label>
         <TipTapEditor content={content} onChange={setContent} />
       </div>
 
       <CategoryPicker selected={categories} onChange={setCategories} />
 
       <div>
-        <label className="block text-primary font-title mb-2">تحریر از:</label>
+        <label className="block text-primary font-title mb-1.5 text-base">تحریر از:</label>
         <input
           type="text"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           placeholder="اپنا نام لکھیں"
-          className="w-full border border-gray-300 rounded-lg px-4 py-2"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-base focus:border-primary focus:outline-none"
         />
       </div>
 
       {error && <p className="text-red-600">{error}</p>}
 
-      <div className="flex gap-3 flex-wrap">
-        <button type="button" onClick={save} disabled={saving} className="px-6 py-2 bg-accent text-white rounded-full min-h-[44px] disabled:opacity-50">
-          {saving ? "محفوظ ہو رہا ہے..." : "محفوظ کریں"}
-        </button>
-        <button type="button" onClick={onCancel} className="px-6 py-2 border border-primary text-primary rounded-full min-h-[44px]">
-          منسوخ
-        </button>
+      <div className="flex gap-2 flex-wrap pt-2">
+        <ActionButton variant="accent" onClick={save} disabled={saving}>
+          {saving ? "..." : "محفوظ"}
+        </ActionButton>
+        <ActionButton variant="outline" onClick={onCancel}>منسوخ</ActionButton>
       </div>
     </div>
   );

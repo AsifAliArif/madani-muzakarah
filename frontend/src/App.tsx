@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import Sidebar from "./components/Sidebar";
+import AppHeader from "./components/AppHeader";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
+import SearchPage from "./pages/SearchPage";
 import NoteDetailPage from "./pages/NoteDetailPage";
 import ArchivePage from "./pages/ArchivePage";
 import AdminPage from "./pages/AdminPage";
@@ -15,9 +18,14 @@ import { api } from "./api/client";
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">لوڈ ہو رہا ہے...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center font-urdu text-primary">
+        لوڈ ہو رہا ہے...
+      </div>
+    );
   }
   if (!user) return <Navigate to="/login" replace />;
 
@@ -27,9 +35,15 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="app-layout">
-      <Sidebar user={user} onLogout={logout} />
-      <main className="p-4 lg:p-8 max-w-[1320px]">
+    <div className="app-shell">
+      <AppHeader onMenuOpen={() => setSidebarOpen(true)} />
+      <Sidebar
+        user={user}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogout={logout}
+      />
+      <main className="app-main">
         {children}
         <InstallPrompt />
       </main>
@@ -49,6 +63,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<ProtectedLayout><HomePage /></ProtectedLayout>} />
+      <Route path="/search" element={<ProtectedLayout><SearchPage /></ProtectedLayout>} />
       <Route path="/archive" element={<ProtectedLayout><ArchivePage /></ProtectedLayout>} />
       <Route path="/notes/:id" element={<ProtectedLayout><NoteDetailPage /></ProtectedLayout>} />
       <Route path="/admin" element={<ProtectedLayout><AdminRoute><AdminPage /></AdminRoute></ProtectedLayout>} />
